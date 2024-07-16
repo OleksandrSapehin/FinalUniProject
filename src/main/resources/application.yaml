@@ -1,0 +1,49 @@
+spring:
+  config:
+    import: optional:file:.env[.properties]
+  application:
+    name: questions-servise
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${HOST}:5432/${POSTGRES_DATABASE}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    generate-ddl: false
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        show_sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            clientId: 298339570878-bjsgub53ae8k5passva2usvgls7snspv.apps.googleusercontent.com
+            clientSecret: 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
+            scope: openid,profile,email,https://www.googleapis.com/auth/youtube
+            redirect-uri: https://localhost:8443/login/oauth2/code/google
+        provider:
+           google:
+                authorization-uri: https://accounts.google.com/o/oauth2/auth
+                token-uri: https://oauth2.googleapis.com/token
+                user-info-uri: https://openidconnect.googleapis.com/v1/userinfo
+                jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+                user-name-attribute: sub
+logging:
+  level:
+    com.springbootlearning: DEBUG
+    org.springframework.security: TRACE
+    org.springframework.security.oaut2: TRACE
+    org.springframework.web: TRACE
+    org.springframework.web.reactive: TRACE
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:keystore.p12
+    key-store-password: ZXcewq12345
+    key-store-type: PKCS12
+    key-alias: tomcat
