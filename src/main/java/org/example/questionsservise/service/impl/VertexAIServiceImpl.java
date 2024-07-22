@@ -2,16 +2,12 @@ package org.example.questionsservise.service.impl;
 
 import com.google.cloud.vertexai.api.*;
 import com.google.cloud.vertexai.generativeai.GenerativeModel;
-import com.google.gson.*;
-import com.google.gson.stream.JsonReader;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.example.questionsservise.service.VertexAIService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import java.io.IOException;
-import java.io.StringReader;
 import java.util.*;
 
 
@@ -24,9 +20,9 @@ public class VertexAIServiceImpl implements VertexAIService {
 
     @Override
     public List<String> extractQuestions(String text) throws IOException {
-        String prompt = "Write in your response only extracted interviewer's questions, comma separated from the following text: " + text;
+        String prompt = "Extract and list only the interviewer's questions from the following text, separating each question with a comma. Ensure that each question is complete and correctly formatted: " + text;
         GenerateContentResponse response = generativeModel.generateContent(prompt);
-        String responseText = response.getCandidatesList().getFirst().getContent().toString();
+        String responseText = response.getCandidatesList().getFirst().getContent().toString().replace("\\'", "'").trim();
         log.info("AI response text: {}", responseText);
 
         List<String> questions = extractQuestionsFromText(responseText);
@@ -38,18 +34,13 @@ public class VertexAIServiceImpl implements VertexAIService {
     private List<String> extractQuestionsFromText(String text) {
         List<String> questions = new ArrayList<>();
 
-        text = text.replaceAll("role: \"model\"", "")
-                .replaceAll("parts \\{", "")
-                .replaceAll("\\}", "")
-                .replaceAll("text: \"", "")
-                .replaceAll("\"$", "")
-                .trim();
+        String[] questionStarters = {"what", "how", "why", "when", "where", "who", "which", "can", "is", "are", "do", "does", "did", "could", "would", "should", "will"};
 
         String[] splitText = text.split("[,\\n]");
 
         for (String part : splitText) {
             part = part.trim();
-            if (!part.isEmpty()) {
+            if (isQuestion(part, questionStarters)) {
                 questions.add(part);
             }
         }
@@ -62,5 +53,15 @@ public class VertexAIServiceImpl implements VertexAIService {
         }
         log.info("Extracted questions from text: {}", questions);
         return questions;
+    }
+
+    private boolean isQuestion(String text, String[] starters) {
+        text = text.toLowerCase();
+        for (String starter : starters) {
+            if (text.startsWith(starter) || text.endsWith("?")) {
+                return true;
+            }
+        }
+        return false;
     }
 }
